@@ -1,0 +1,104 @@
+I worked on a Loan Approval Prediction project using the KNN algorithm in Python. In this project, I performed data cleaning, preprocessing, feature scaling, and trained a KNN model to predict whether a loan will be approved or rejected based on user input. 
+This helped me understand how distance-based algorithms work and why scaling is important in machine learning. Learning step by step
+
+""" CODE """
+# Loan Approval Prediction using KNN 
+
+import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+
+# STEP 1: Load Dataset
+file_path = "loan_approval_dataset_5000.csv"
+df = pd.read_csv(file_path)
+print("Dataset Loaded")
+print("Shape:", df.shape)
+
+# STEP 2: Data Cleaning
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+print("\nDuplicate Rows:", df.duplicated().sum())
+
+
+# STEP 3: Data Preprocessing
+
+# Drop unnecessary column
+df.drop("loan_id", axis=1, inplace=True)
+
+# Encode categorical columns
+encoder = LabelEncoder()
+df["education"] = encoder.fit_transform(df["education"])        # Graduate=1, Not Graduate=0
+df["self_employed"] = encoder.fit_transform(df["self_employed"])# Yes=1, No=0
+df["loan_status"] = encoder.fit_transform(df["loan_status"])    # Approved=1, Rejected=0
+
+# Feature and target split
+X = df.drop("loan_status", axis=1)
+y = df["loan_status"]
+
+# Feature scaling (important for KNN)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+
+# STEP 4: Train-Test Split 
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, random_state=42
+)
+
+
+# STEP 5: Train KNN Model
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)
+
+
+#  STEP 6: Model Evaluation
+y_pred = knn.predict(X_test)
+
+print("\nModel Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+
+# STEP 7: User Input Prediction 
+print("\n Loan Approval Prediction ")
+
+dependents = int(input("Enter number of dependents (0-5): "))
+education = input("Education (Graduate / Not Graduate): ")
+self_employed = input("Self Employed (Yes / No): ")
+income = float(input("Enter annual income: "))
+loan_amount = float(input("Enter loan amount: "))
+loan_term = int(input("Enter loan term (years): "))
+cibil = int(input("Enter CIBIL score: "))
+residential = float(input("Enter residential asset value: "))
+commercial = float(input("Enter commercial asset value: "))
+luxury = float(input("Enter luxury asset value: "))
+bank = float(input("Enter bank asset value: "))
+
+# Encoding user input
+education = 1 if education.lower() == "graduate" else 0
+self_employed = 1 if self_employed.lower() == "yes" else 0
+
+# Create input array
+user_data = np.array([[dependents, education, self_employed,
+                        income, loan_amount, loan_term, cibil,
+                        residential, commercial, luxury, bank]])
+
+# Scale input
+user_data_scaled = scaler.transform(user_data)
+
+# Prediction
+prediction = knn.predict(user_data_scaled)
+
+print("\nFinal Result:")
+if prediction[0] == 1:
+    print("Loan Approved")
+else:
+    print("Loan Rejected")
+
+
